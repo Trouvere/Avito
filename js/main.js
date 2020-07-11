@@ -3,7 +3,7 @@
 // const dataBase = [];
 
 const dataBase = JSON.parse(localStorage.getItem("AWITO")) || [];
-
+let counter = dataBase.length;
 const modalAdd = document.querySelector(".modal__add"),
   addAd = document.querySelector(".add__ad"),
   modalBtnSubmit = document.querySelector(".modal__btn-submit"),
@@ -20,6 +20,9 @@ const modalImageItem = document.querySelector(".modal__image-item"),
   modalStatusItem = document.querySelector(".modal__status-item"),
   modalDescriptionItem = document.querySelector(".modal__description-item"),
   modalCostItem = document.querySelector(".modal__cost-item");
+
+const searchInput = document.querySelector(".search__input"),
+  menuContainer = document.querySelector(".menu__container");
 
 const textFileBtn = modalFileBtn.textContent;
 const srsModalImage = modalImageAdd.src;
@@ -60,13 +63,13 @@ const closeModal = (event) => {
   }
 };
 
-const renderCard = () => {
+const renderCard = (DB = dataBase) => {
   catalog.textContent = "";
-  dataBase.forEach((item, i) => {
+  DB.forEach((item) => {
     catalog.insertAdjacentHTML(
       "beforeend",
       `
-    <li class="card" data-id-item="${i}">
+    <li class="card" data-id-item="${item.id}">
     <img class="card__image" src="data:image/jpeg;base64,${item.image}" alt="test" />
     <div class="card__description">
       <h3 class="card__header">${item.nameItem}</h3>
@@ -77,6 +80,22 @@ const renderCard = () => {
     );
   });
 };
+
+searchInput.addEventListener("input", (event) => {
+  // const target = event.target;
+  const valueSearch = searchInput.value.trim().toLowerCase();
+  // console.log(valueSearch);
+  if (valueSearch.length > 2) {
+    console.log(valueSearch);
+    const result = dataBase.filter(
+      (item) =>
+        item.nameItem.toLowerCase().includes(valueSearch) ||
+        item.descriptionItem.toLowerCase().includes(valueSearch)
+    );
+    console.log(result);
+    renderCard(result);
+  }
+});
 
 modalFileInput.addEventListener("change", (event) => {
   const target = event.target;
@@ -109,8 +128,10 @@ modalSubmit.addEventListener("input", () => {
 modalSubmit.addEventListener("submit", (event) => {
   event.preventDefault();
   const itemObj = {};
+
   for (const elem of elementsModalSubmit) {
     itemObj[elem.name] = elem.value;
+    itemObj.id = counter++;
   }
   itemObj.image = infoPhoto.base64;
   dataBase.push(itemObj);
@@ -131,7 +152,7 @@ catalog.addEventListener("click", () => {
   const target = event.target;
   const card = target.closest(".card");
   if (card) {
-    const item = dataBase[card.dataset.idItem];
+    const item = dataBase.find((item) => item.id === +card.dataset.id);
     // console.log(dataBase);
     modalImageItem.src = `data:image/jpeg;base64,${item.image}`;
     modalHeaderItem.textContent = item.nameItem;
@@ -141,6 +162,16 @@ catalog.addEventListener("click", () => {
 
     modalItem.classList.remove("hide");
     document.addEventListener("keydown", closeModal);
+  }
+});
+
+menuContainer.addEventListener("click", () => {
+  const target = event.target;
+  if (target.tagName === "A") {
+    const result = dataBase.filter(
+      (item) => item.category === target.dataset.category
+    );
+    renderCard(result);
   }
 });
 
